@@ -1,0 +1,278 @@
+---
+title: "Template"
+author: "`r system('whoami', intern = TRUE)`"
+date: "`r Sys.Date()`"
+output:
+   BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    collapsed: true
+    smooth_scroll: true
+    df_print: paged
+    code_download: true
+    highlight: kate
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+params:
+  fig_path: "figures/"
+  d_out: "./"
+---
+
+# Preparations
+
+## Set global options
+
+```{r style, echo = FALSE, results="asis", cache=FALSE, message=FALSE}
+# v.05
+
+# This piece of code is necessary if running Rmd on vscode,
+# which does not read the header
+if (!exists("params")) {
+  params <- list(fig_path = "figures/", d_out = "./")
+}
+
+# Set knit global options
+library("knitr")
+options(digits = 2, width = 80)
+golden_ratio <- (1 + sqrt(5)) / 2
+opts_chunk$set(
+  # General chunk configuration
+  cache = FALSE,
+  warning = FALSE, # Make warning FALSE, unless explicitly turn it on
+  echo = TRUE,
+  tidy = FALSE,
+  include = TRUE,
+  # Figure configurations
+  fig.path = params$fig_path,
+  dev = c("png"),
+  fig.height = 10,
+  fig.width = 10 * golden_ratio,
+  fig.wide = TRUE,
+  out.width = "150%", # Make figures appear larger and fit to the page width
+  dpi = 300,
+  comment = "  "
+)
+
+# Set seed for reproducibility
+set.seed(13)
+
+# Set plot options
+library("ggplot2")
+library(ggthemes)
+theme_set(theme_bw(base_size = 20))
+
+#  Set color blind friendly pallet as default for discrete colors
+# Source of palette: https://www.sthda.com/english/articles/32-r-graphics-essentials/125-ggplot-cheat-sheet-for-great-customization #nolint
+cbp1 <- c(
+  "#E69F00",
+  "#56B4E9",
+  "#009E73",
+  "#F0E442",
+  "#0072B2",
+  "#D55E00",
+  "#CC79A7",
+  "#999999"
+)
+
+dynamic_cbp1_colors <- function(n) {
+  colorRampPalette(cbp1)(n)
+}
+
+# Define custom scales using the dynamic color generator
+scale_fill_custom <- function(...) {
+  discrete_scale(
+    aesthetics = "fill",
+    scale_name = "custom",
+    palette = dynamic_cbp1_colors,
+    ...
+  )
+}
+scale_colour_custom <- function(...) {
+  discrete_scale(
+    aesthetics = "colour",
+    scale_name = "custom",
+    palette = dynamic_cbp1_colors, ...
+  )
+}
+
+# Set the custom scales as default
+options(
+  ggplot2.discrete.fill = scale_fill_custom,
+  ggplot2.discrete.colour = scale_colour_custom
+)
+
+# Set viridis as default for scale continuous
+options(
+  ggplot2.continuous.fill = scale_fill_viridis_c,
+  ggplot2.continuous.colour = scale_colour_viridis_c
+)
+
+
+#' Display Data Frame with Formatted Numeric Columns
+#'
+#' This function formats a data frame by rounding numeric columns and
+#' displaying it either as a static table using `knitr::kable` or as an
+#' interactive table using `DT::datatable`.
+#'
+#' @param data A data frame to be formatted and displayed.
+#' @param type A character string specifying the display type: "static"
+#' for a static table using `knitr::kable`,
+#' "interactive" for an interactive table using `DT::datatable`.
+#' Default is "static".
+#' @param n_round An integer specifying the number of decimal places to round
+#'  numeric columns. Default is 3.
+#'
+#' @return Formatted data frame displayed as specified.
+#' @examples
+#' \dontrun{
+#' show_df(data, type = "static")
+#' show_df(data, type = "interactive", n_round = 2)
+#' }
+show_df <- function(data, type = "static", n_round = 3) {
+  data <- data %>% mutate_if(is.numeric, \(x) round(x, n_round))
+  if (type == "static") {
+    data <- knitr::kable(data, row.names = FALSE)
+  }
+  if (type == "interactive") {
+    data <- DT::datatable(data,
+      rownames = FALSE, extensions = "FixedColumns",
+      options = list(scrollX = TRUE, fixedColumns = list(leftColumns = 1))
+    )
+  }
+  data
+}
+# Set output directory
+d_out <- params$d_out
+rm(params)
+```
+
+
+## Libraries
+
+```{r}
+library(tidyverse)
+```
+# Introduction
+
+I will demonstrate how to use this template.
+
+I normally knit this script using the axiliary script `knit_conda` (for R on conda) or `knit_local` (for R installed locally). If it does not work, check if paths (pandoc) and assumptions in the script are met. 
+
+```{bash, eval = FALSE}
+bash knit_local 00_template.Rmd
+```
+If your code is in nested somewhere in the `code` folder, the output will be in the corresponding folder in `results`. If not, the output will be in the `working directory`.
+
+
+>Of note, the figures are saved in the `figures` folder as `png`.
+
+# Input data
+Input data is just a chatGPT request on Tarantino's movies. This data is as fake as a two-dollar bill.
+
+
+```{r}
+# Create the data frame using tribble
+tarantino_scenes <- tribble(
+  ~movie, ~salary_per_movie, ~actor, ~minutes_on_screen,
+  "Pulp Fiction", 56000, "Samuel L. Jackson", 45,
+  "Kill Bill: Vol. 1", 60000, "Uma Thurman", 60,
+  "Kill Bill: Vol. 2", 55000, "Christoph Waltz", 30,
+  "Inglourious Basterds", 70000, "Brad Pitt", 50,
+  "Django Unchained", 80000, "Leonardo DiCaprio", 40,
+  "The Hateful Eight", 50000, "Kurt Russell", 55,
+  "Once Upon a Time in Hollywood", 58000, "Jennifer Lawrence", 35,
+  "Reservoir Dogs", 45000, "Harvey Keitel", 25,
+  "Jackie Brown", 42000, "Pam Grier", 20,
+  "Death Proof", 48000, "Michael Madsen", 15
+)
+
+# Print the table
+glimpse(tarantino_scenes)
+```
+
+# Inspect data
+
+## Static table
+Use function `show_df` to display the data frame statically. This is based on `knitr::kable`.
+
+```{r}
+tarantino_scenes %>% show_df("static")
+```
+
+## Interactive table
+Use function `show_df` to display the data frame interactively. This is based on `DT::datatable`.
+
+```{r}
+tarantino_scenes %>% show_df("interactive")
+```
+
+# Plot data {.tabset}
+
+I modified the color of the plots. Note that the subsections here are in a tab.
+
+## Discrete colors
+
+Discrete colors are now based on a color blind friendly palette. You can modify it, by changing the `cbp1` vector in the header of the markdown.
+```{r}
+tarantino_scenes %>%
+  ggplot(aes(
+    x = fct_reorder(actor, desc(minutes_on_screen)),
+    y = minutes_on_screen
+  )) +
+  geom_bar(stat = "identity", position = "dodge", aes(fill = actor)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title = "Minutes on screen by actor",
+    x = "Movie",
+    y = "Minutes on screen"
+  )
+```
+
+## Discrete colors with ordinal data
+
+Ordinal data has ggplot original colors, which are viridis.
+```{r}
+tarantino_scenes %>%
+  # Make actors ordinal
+  mutate(actor = factor(actor, levels = unique(actor), order = TRUE)) %>%
+  ggplot(aes(
+    x = fct_reorder(actor, desc(minutes_on_screen)),
+    y = minutes_on_screen
+  )) +
+  geom_bar(stat = "identity", position = "dodge", aes(fill = actor)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title = "Minutes on screen by actor",
+    x = "Movie",
+    y = "Minutes on screen"
+  )
+```
+
+## Continuous
+
+Continuous colors are based on the viridis palette.
+
+```{r}
+tarantino_scenes %>%
+  ggplot(aes(
+    x = minutes_on_screen,
+    y = salary_per_movie
+  )) +
+  geom_point(aes(color = salary_per_movie), size = 10)
+```
+
+
+# Conclusion
+
+This is a template for Rmarkdown. I think it is pretty and useful.
+
+# Perspectives
+
+I would like to have it in Quarto, as it seems to become standard. However, I am having some issues for knitting in other folder with Quarto. So, for now, I will stick with Rmarkdown.
+
+# Session info
+
+```{r}
+sessionInfo()
+```

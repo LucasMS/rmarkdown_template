@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# This script should be run from the main project folder.
+# This is a helper script that knits the Rmd from code to its corresponding
+# folder in results. For instance, if the code is at `PATH/code/01_dothis/` the results
+# will be at `PATH/results/01_dothis/`.
+# It assumes R and pandoc are at the conda environmet `conda_envs/r`
+
+
+# Set variables so output dir and output file are derived from the inputfile.
+base_dir=$(realpath "$(pwd)")
+input_file=$(realpath "$1")
+# # Extract the filename from the full path and remove the .Rmd extension
+core_file_name=$(basename "$input_file" | sed 's/\.Rmd$//')
+# # Make dirout from script path. Substitute '$base_dir/code/' with '$base_dir/results/'
+dir_in=$(dirname $input_file)
+# If your code is in nested somewhere in the `code` folder, the output will
+# be in the corresponding folder in `results`. 
+# If not, the output will be in the `base_dir` folder.
+dir_out=$(echo $dir_in | sed "s|${base_dir}/code|${base_dir}/results|")
+echo $dir_out
+output_file=${dir_out}/${core_file_name}'.html'
+fig_path=${dir_out}'/'${core_file_name}'/'
+
+# # Make directory
+mkdir "${dir_out}" -p
+
+# # Render Rmarkdown file from main project folder, so relative paths inside the 
+# # Rmd will work.
+# # Assumes R and pandoc are locally installed at conda_envs/r
+# # otherwise, remove the source activate and use your pandoc instalation, for
+# # instance `/usr/lib/rstudio/bin/pandoc`
+# # This adds conda to the path, so it is can be found in the command below: 
+# # https://saturncloud.io/blog/calling-conda-source-activate-from-bash-script-a-guide/
+# # To look for the PANDOC installation, open Rstudio and type Sys.getenv("RSTUDIO_PANDOC")
+source project_env 
+source activate conda_envs/r
+
+R -e "Sys.setenv(RSTUDIO_PANDOC='conda_envs/r/bin/pandoc');
+  rmarkdown::render(
+      input = '${input_file}',
+      output_file ='${output_file}',
+      knit_root_dir = '${base_dir}', # render from base directory.
+      params = list(
+        fig_path = '${fig_path}',
+        d_out = '${dir_out}'
+      )
+  )"
+
+conda deactivate
