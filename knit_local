@@ -4,10 +4,39 @@
 # This is a helper script that knits the Rmd from code to its corresponding
 # folder in results. For instance, if the code is at `PATH/code/01_dothis/` the results
 # will be at `PATH/results/01_dothis/`.
-# It assumes R and pandoc are at the conda environmet `conda_envs/r`
+# It assumes R. Pandoc is derived depending on where you are working on.
+# Also, it forces output directory to be $project_dir if on medcluster
 
+# Set Pandoc depending if on medcluster
 
-# Set variables so output dir and output file are derived from the inputfile.
+hostname=$(hostname)
+## Get variables to check if you are at medcluster
+hostname_tail=$(echo $hostname | rev | cut -c 1-14 | rev)
+medcluster_tail="rz.uni-kiel.de"
+# Above, I am assuming that all medcluster nodes have the same name tail.
+if [ "${hostname_tail}" == "${medcluster_tail}" ]; then
+    # Load variables and environments for medcluster ---------------------------
+    source project_env
+
+    # PANDOC location ----------------------------------------------------------
+    pandoc_loc="/sw_ifs/sw/spack/spack-0.13.4/usr/opt/spack/linux-centos7-x86_64/gcc-8.3.0/pandoc-2.9.2-3wkysofg6puqbdfcbegxbkbmndnwfxwq/bin/pandoc"
+
+else
+
+  # PANDOC location ------------------------------------------------------------
+  host=$(uname -a | cut -f1 -d " ")
+  if [ "${host}" == "Linux" ]; then
+    # Location for local ubunutu
+    pandoc_loc=/usr/lib/rstudio/resources/app/bin/quarto/bin/tools/x86_64
+  else
+    # Otherwise assumes its a mac
+    pandoc_loc=/Applications/RStudio.app/Contents/Resources/app/quarto/bin/tools
+  fi
+
+fi
+
+# Set file paths -------------------------------------------------------------
+# Set locations of files ar dir
 base_dir=$(realpath "$(pwd)")
 input_file=$(realpath "$1")
 # # Extract the filename from the full path and remove the .Rmd extension
@@ -15,7 +44,7 @@ core_file_name=$(basename "$input_file" | sed 's/\.Rmd$//')
 # # Make dirout from script path. Substitute '$base_dir/code/' with '$base_dir/results/'
 dir_in=$(dirname $input_file)
 # If your code is in nested somewhere in the `code` folder, the output will
-# be in the corresponding folder in `results`. 
+# be in the corresponding folder in `results`.
 # If not, the output will be in the `base_dir` folder.
 dir_out=$(echo $dir_in | sed "s|${base_dir}/code|${base_dir}/results|")
 echo $dir_out
@@ -23,18 +52,18 @@ output_file=${dir_out}/${core_file_name}'.html'
 fig_path=${dir_out}'/'${core_file_name}'/'
 
 # # Make directory
-mkdir "${dir_out}" -p
+mkdir -p "${dir_out}"
 
-# # Render Rmarkdown file from main project folder, so relative paths inside the 
+# # Render Rmarkdown file from main project folder, so relative paths inside the
 # # Rmd will work.
 # # Assumes R and pandoc are locally installed at conda_envs/r
 # # otherwise, remove the source activate and use your pandoc instalation, for
 # # instance `/usr/lib/rstudio/bin/pandoc`
-# # This adds conda to the path, so it is can be found in the command below: 
+# # This adds conda to the path, so it is can be found in the command below:
 # # https://saturncloud.io/blog/calling-conda-source-activate-from-bash-script-a-guide/
 # # To look for the PANDOC installation, open Rstudio and type Sys.getenv("RSTUDIO_PANDOC")
 
-R -e "Sys.setenv(RSTUDIO_PANDOC='/usr/lib/rstudio/resources/app/bin/quarto/bin/tools/x86_64');
+R -e "Sys.setenv(RSTUDIO_PANDOC='${pandoc_loc}');
   rmarkdown::render(
       input = '${input_file}',
       output_file ='${output_file}',
