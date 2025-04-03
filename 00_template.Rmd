@@ -40,14 +40,15 @@ opts_chunk$set(
   # General chunk configuration
   cache = FALSE,
   warning = FALSE, # Make warning FALSE, unless explicitly turn it on
+  message = TRUE, # Turn to FALSE to avoid verbose and to have clean documents
   echo = TRUE,
   tidy = FALSE,
   include = TRUE,
   # Figure configurations
   fig.path = params$fig_path,
   dev = c("png"),
-  fig.height = 10,
-  fig.width = 10 * golden_ratio,
+  fig.height = 5,
+  fig.width = 5 * golden_ratio,
   fig.wide = TRUE,
   out.width = "150%", # Make figures appear larger and fit to the page width
   dpi = 300,
@@ -60,7 +61,7 @@ set.seed(13)
 # Set plot options
 library("ggplot2")
 library(ggthemes)
-theme_set(theme_bw(base_size = 20))
+theme_set(theme_bw(base_size = 10))
 
 #  Set color blind friendly pallet as default for discrete colors
 # Source of palette: https://www.sthda.com/english/articles/32-r-graphics-essentials/125-ggplot-cheat-sheet-for-great-customization #nolint
