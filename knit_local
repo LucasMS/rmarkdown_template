@@ -5,25 +5,18 @@
 # folder in results. For instance, if the code is at `PATH/code/01_dothis/` the results
 # will be at `PATH/results/01_dothis/`.
 # It assumes R. Pandoc is derived depending on where you are working on.
-# Also, it forces output directory to be $project_dir if on medcluster
+# Also, it forces output directory to be $project_dir if on caucluster
 
-# Set Pandoc depending if on medcluster
+# Set Pandoc caucluster path
+pandoc_caucluster=/zfshome/sw/spack/spack0.18.1/usr/opt/spack/linux-rocky8-x86_64/gcc-12.1.0/pandoc-2.14.0.3-rdmtfng72ukihhncvb3q3qsh45kw6aux/bin/pandoc
 
-hostname=$(hostname)
-## Get variables to check if you are at medcluster
-hostname_tail=$(echo $hostname | rev | cut -c 1-14 | rev)
-medcluster_tail="rz.uni-kiel.de"
-# Above, I am assuming that all medcluster nodes have the same name tail.
-if [ "${hostname_tail}" == "${medcluster_tail}" ]; then
-    # Load variables and environments for medcluster ---------------------------
-    source project_env
-
-    # PANDOC location ----------------------------------------------------------
-    pandoc_loc="/sw_ifs/sw/spack/spack-0.13.4/usr/opt/spack/linux-centos7-x86_64/gcc-8.3.0/pandoc-2.9.2-3wkysofg6puqbdfcbegxbkbmndnwfxwq/bin/pandoc"
+# If you are running on the caucluster, set caucluster pandoc path.
+if [ -x "${pandoc_caucluster}" ]; then
+  # PANDOC location ----------------------------------------------------------
+  pandoc_loc="${pandoc_caucluster}"
 
 else
-
-  # PANDOC location ------------------------------------------------------------
+  # PANDOC location ---------------------------------------------------------
   host=$(uname -a | cut -f1 -d " ")
   if [ "${host}" == "Linux" ]; then
     # Location for local ubunutu
