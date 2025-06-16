@@ -13,6 +13,7 @@ pandoc_caucluster=/zfshome/sw/spack/spack0.18.1/usr/opt/spack/linux-rocky8-x86_6
 # If you are running on the caucluster, set caucluster pandoc path.
 if [ -x "${pandoc_caucluster}" ]; then
   # PANDOC location ----------------------------------------------------------
+  module load pandoc/2.14.0.3  
   pandoc_loc="${pandoc_caucluster}"
 
 else
