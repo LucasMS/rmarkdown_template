@@ -66,14 +66,14 @@ theme_set(theme_bw(base_size = 10))
 #  Set color blind friendly pallet as default for discrete colors
 # Source of palette: https://www.sthda.com/english/articles/32-r-graphics-essentials/125-ggplot-cheat-sheet-for-great-customization #nolint
 cbp1 <- c(
-  "#E69F00",
-  "#56B4E9",
-  "#009E73",
-  "#F0E442",
   "#0072B2",
-  "#D55E00",
+  "#E69F00",
+  "#009E73",
+  "#999999",
+  "#F0E442",
+  "#56B4E9",
   "#CC79A7",
-  "#999999"
+  "#D55E00"
 )
 
 dynamic_cbp1_colors <- function(n) {
